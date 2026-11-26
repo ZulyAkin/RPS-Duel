@@ -25,3 +25,5 @@ export function shortAddress(address: string): string {
 export function txExplorerUrl(hash: string): string {
   return `${arcTestnet.blockExplorers.default.url}/tx/${hash}`
 }
+
+export const FAUCET_URL = 'https://faucet.circle.com'

@@ -3,7 +3,7 @@ import { ConnectKitButton } from 'connectkit'
 import { erc20Abi, parseEventLogs } from 'viem'
 import { useAccount, useReadContract, useWriteContract } from 'wagmi'
 import { RPS_ADDRESS, RPS_CHAIN_ID, rpsAbi } from '@/lib/rps'
-import { USDC_ADDRESS, fmtUsdc, parseUsdc } from '@/lib/usdc'
+import { FAUCET_URL, USDC_ADDRESS, fmtUsdc, parseUsdc } from '@/lib/usdc'
 import { useUsdcAllowance, useUsdcBalance } from '@/hooks/useGames'
 import { useTxRunner } from '@/hooks/useTxRunner'
 import { TxNotice } from '@/components/TxNotice'
@@ -180,6 +180,15 @@ export function CreateGameCard({ onCreated }: { onCreated: (id: bigint) => void 
               </button>
             )}
           </ConnectKitButton.Custom>
+        )}
+
+        {isConnected && insufficient && (
+          <p className="text-center text-xs" style={{ color: 'var(--muted)' }}>
+            You need more USDC for this stake.{' '}
+            <a href={FAUCET_URL} target="_blank" rel="noopener noreferrer" className="font-semibold underline" style={{ color: 'var(--accent-hover)' }}>
+              Get test USDC
+            </a>
+          </p>
         )}
 
         <TxNotice status={tx.status} onDismiss={tx.reset} />

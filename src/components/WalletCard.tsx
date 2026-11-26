@@ -1,13 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ConnectKitButton } from 'connectkit'
 import { TokenUSDC } from '@web3icons/react'
 import { useAccount, useDisconnect, useSwitchChain } from 'wagmi'
 import { Check, Copy, Droplets, LogOut, TriangleAlert } from 'lucide-react'
+import { toast } from 'sonner'
 import { useUsdcBalance } from '@/hooks/useGames'
 import { RPS_CHAIN_ID } from '@/lib/rps'
-import { fmtUsdc, shortAddress } from '@/lib/usdc'
-
-const FAUCET_URL = 'https://faucet.circle.com'
+import { FAUCET_URL, fmtUsdc, shortAddress } from '@/lib/usdc'
 
 /** Wallet dashboard: address, network check, live USDC balance and the test USDC faucet. */
 export function WalletCard() {
@@ -16,6 +15,18 @@ export function WalletCard() {
   const { switchChain, isPending: switching, error: switchError } = useSwitchChain()
   const balance = useUsdcBalance()
   const [copied, setCopied] = useState(false)
+  const lastBalance = useRef<bigint | undefined>(undefined)
+
+  // Tell the player when faucet USDC (or a payout) lands in their wallet.
+  useEffect(() => {
+    const current = balance.data
+    if (current === undefined) return
+    const previous = lastBalance.current
+    lastBalance.current = current
+    if (previous !== undefined && current > previous) {
+      toast.success(`${fmtUsdc(current - previous)} USDC received`)
+    }
+  }, [balance.data])
 
   if (!isConnected || !address) {
     return (
