@@ -104,6 +104,16 @@ export function loadMove(player: Address, gameId: bigint, round: number): Stored
   }
 }
 
+/** Rock beats scissors, scissors beats paper, paper beats rock. */
+export function roundOutcome(mine: number, theirs: number): 'win' | 'lose' | 'tie' {
+  if (mine === theirs) return 'tie'
+  const wins =
+    (mine === Move.Rock && theirs === Move.Scissors) ||
+    (mine === Move.Paper && theirs === Move.Rock) ||
+    (mine === Move.Scissors && theirs === Move.Paper)
+  return wins ? 'win' : 'lose'
+}
+
 export const MOVE_LABEL: Record<number, string> = { 1: 'Rock', 2: 'Paper', 3: 'Scissors' }
 
 export function formatFormat(bestOf: number): string {
