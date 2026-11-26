@@ -134,20 +134,42 @@ const ERROR_COPY: Record<string, string> = {
   NothingToClaim: 'Nothing to cash out.',
 }
 
-export function parseOnchainError(error: unknown): string | null {
-  const err = error as { code?: number; shortMessage?: string; message?: string; cause?: { code?: number } } | undefined
-  const message = `${err?.shortMessage ?? ''} ${err?.message ?? ''}`
-  const lower = message.toLowerCase()
-  if (err?.code === 4001 || err?.cause?.code === 4001 || lower.includes('user rejected') || lower.includes('user denied')) {
+export interface DescribedError {
+  message: string
+  /** Technical reason from the wallet or node, shown small so problems can be reported precisely. */
+  detail?: string
+}
+
+export function parseOnchainError(error: unknown): DescribedError | null {
+  const err = error as { code?: number; shortMessage?: string; message?: string; name?: string; cause?: { code?: number } } | undefined
+  const raw = `${err?.shortMessage ?? ''} ${err?.message ?? ''}`
+  const lower = raw.toLowerCase()
+  if (err?.code === 4001 || err?.cause?.code === 4001 || lower.includes('user rejected') || lower.includes('user denied') || lower.includes('rejected the request')) {
     return null
   }
+  console.error('[rps] transaction error', error)
+  const detail = (err?.shortMessage ?? err?.message ?? 'Unknown error').split('\n')[0].slice(0, 160)
+
   for (const [name, copy] of Object.entries(ERROR_COPY)) {
-    if (message.includes(name)) return copy
+    if (raw.includes(name)) return { message: copy, detail }
   }
-  if (lower.includes('insufficient funds') || lower.includes('exceeds balance') || lower.includes('transfer amount exceeds')) {
-    return 'Insufficient USDC balance.'
+  if (lower.includes('does not match the target chain') || lower.includes('chainmismatch') || lower.includes('chain mismatch')) {
+    return { message: 'Your wallet is on a different network. Switch to Arc Testnet and try again.', detail }
   }
-  if (lower.includes('network') || lower.includes('timeout')) return 'Network issue. Check your connection and retry.'
-  if (lower.includes('reverted')) return 'Transaction failed. Please try again.'
-  return 'Something went wrong. Please try again.'
+  if (err?.code === 4902 || lower.includes('unrecognized chain') || lower.includes('add ethereum chain') || lower.includes('switch chain') || lower.includes('switchchain')) {
+    return { message: 'Your wallet could not switch to Arc Testnet. Add the network in your wallet settings, then try again.', detail }
+  }
+  if (lower.includes('not connected') || lower.includes('connector not connected')) {
+    return { message: 'Your wallet is not connected. Reconnect it and try again.', detail }
+  }
+  if (lower.includes('insufficient funds') || lower.includes('exceeds the balance') || lower.includes('exceeds balance') || lower.includes('transfer amount exceeds')) {
+    return { message: 'Not enough USDC for this stake plus network fees. Get test USDC and try again.', detail }
+  }
+  if (lower.includes('network') || lower.includes('timeout') || lower.includes('fetch')) {
+    return { message: 'Network issue. Check your connection and retry.', detail }
+  }
+  if (lower.includes('reverted') || lower.includes('execution reverted')) {
+    return { message: 'The transaction would fail onchain. Check the stake and try again.', detail }
+  }
+  return { message: 'Something went wrong. Please try again.', detail }
 }

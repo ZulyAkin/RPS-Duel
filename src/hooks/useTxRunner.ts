@@ -8,7 +8,7 @@ export type TxStatus =
   | { phase: 'idle'; lastHash?: Hash }
   | { phase: 'wallet'; label: string }
   | { phase: 'confirming'; label: string; hash: Hash }
-  | { phase: 'error'; label: string; error: string }
+  | { phase: 'error'; label: string; error: string; detail?: string }
 
 /**
  * Runs one wallet transaction end to end: switches to Arc Testnet, asks the wallet to sign,
@@ -25,7 +25,15 @@ export function useTxRunner() {
     async (label: string, send: () => Promise<Hash>): Promise<TransactionReceipt | null> => {
       try {
         if (!publicClient) throw new Error('network unavailable')
-        if (chainId !== RPS_CHAIN_ID) await switchChainAsync({ chainId: RPS_CHAIN_ID })
+        if (chainId !== RPS_CHAIN_ID) {
+          try {
+            await switchChainAsync({ chainId: RPS_CHAIN_ID })
+          } catch (switchError) {
+            // Some wallets cannot switch programmatically. If they are already on Arc Testnet the
+            // transaction still works; otherwise the wallet rejects it with a clear message below.
+            if (chainId !== undefined) throw switchError
+          }
+        }
         setStatus({ phase: 'wallet', label })
         const hash = await send()
         setStatus({ phase: 'confirming', label, hash })
@@ -36,7 +44,7 @@ export function useTxRunner() {
         return receipt
       } catch (error) {
         const message = parseOnchainError(error)
-        setStatus(message ? { phase: 'error', label, error: message } : { phase: 'idle' })
+        setStatus(message ? { phase: 'error', label, error: message.message, detail: message.detail } : { phase: 'idle' })
         return null
       }
     },

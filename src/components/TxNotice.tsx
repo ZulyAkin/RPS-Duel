@@ -19,7 +19,10 @@ export function TxNotice({ status, onDismiss }: Props) {
         style={{ background: 'rgba(186,43,76,0.08)', color: 'var(--danger)' }}
       >
         <TriangleAlert className="mt-0.5 size-4 shrink-0" />
-        <span className="flex-1 text-pretty">{status.error}</span>
+        <span className="flex-1 text-pretty">
+          {status.error}
+          {status.detail && <span className="mono mt-1 block break-words text-[11px] opacity-70">{status.detail}</span>}
+        </span>
         <button onClick={onDismiss} aria-label="Dismiss" className="-m-2 p-2">
           <X className="size-4" />
         </button>
