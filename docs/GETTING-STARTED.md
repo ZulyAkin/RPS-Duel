@@ -37,7 +37,7 @@ The contract lives in `contracts/RockPaperScissors.sol`.
 
 ## Playing
 
-1. Connect a wallet on Arc Testnet and get test USDC.
+1. Connect a wallet. The wallet panel shows your USDC balance, switches you to Arc Testnet if needed, and has a **Get test USDC** button that opens the Circle faucet.
 2. Create a game with your stake and format, then share the invite link, or join an open challenge from the lobby.
 3. Lock in a move, then reveal it. Winnings and refunds are cashed out from the lobby.
 

@@ -5,6 +5,7 @@ import { CreateGameCard } from '@/components/CreateGameCard'
 import { Lobby } from '@/components/Lobby'
 import { GameRoom } from '@/components/GameRoom'
 import { SoloPlay } from '@/components/SoloPlay'
+import { WalletCard } from '@/components/WalletCard'
 import { RPS_ADDRESS } from '@/lib/rps'
 
 function readGameId(): bigint | undefined {
@@ -73,6 +74,7 @@ export default function App() {
               </p>
             ) : (
               <>
+                <WalletCard />
                 <ClaimBar />
                 <CreateGameCard onCreated={(id) => openGame(id)} />
                 <Lobby onOpen={(id) => openGame(id)} />
